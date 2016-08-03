@@ -1,9 +1,11 @@
 ﻿using System;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 using BuildMonitor.Models.Home;
 using BuildMonitor.Models.Home.Settings;
 using Newtonsoft.Json;
+using Group = BuildMonitor.Models.Home.Settings.Group;
 
 namespace BuildMonitor.Helpers
 {
@@ -67,11 +69,17 @@ namespace BuildMonitor.Helpers
                 build.Branch = (buildStatusJson != null) ? (buildStatusJson.branchName ?? "default") : "unknown";
                 build.Status = GetBuildStatusForRunningBuild(build.Id);
 
+				var regex = new Regex("[a-zA-Z0-9 -]*(release )");
+				build.buildText = (buildStatusJson != null && buildStatusJson.comment != null)
+					? regex.Replace(buildStatusJson.comment.text.ToString(), string.Empty) : "";
+                
+				build.lastUser = GetLastChangesCommitter();
 				if (build.Status == BuildStatus.Running)
 				{
 					UpdateBuildStatusFromRunningBuildJson(build.Id);
 				}
 
+				build.WebUrl = (buildStatusJson != null && buildStatusJson.webUrl != null) ? buildStatusJson.webUrl : "#";
 				build.UpdatedBy = GetUpdatedBy();
 				build.LastRunText = GetLastRunText();
 				build.IsQueued = IsBuildQueued(build.Id);
@@ -149,5 +157,24 @@ namespace BuildMonitor.Helpers
 				return "Unknown";
 			}
 		}
+
+        private string GetLastChangesCommitter()
+        {
+            try
+            {
+                if (buildStatusJson != null && (string)buildStatusJson.lastChanges.change[0].username != null)
+                {
+                    return buildStatusJson.lastChanges.change[0].username.ToString().Replace("@frontlinetechnologies.com", "");
+                }
+                else 
+                {
+                    return "No Changes";
+                }
+            }
+            catch
+            {
+                return "Unknown";
+            }
+        }
 	}
 }

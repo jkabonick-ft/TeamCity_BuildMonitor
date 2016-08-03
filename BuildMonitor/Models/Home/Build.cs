@@ -11,7 +11,9 @@ namespace BuildMonitor.Models.Home
 		public string LastRunText { get; set; }
 		public bool IsQueued { get; set; }
 		public string StatusDescription { get; set; }
-
+        public string buildText { get; set; }
+        public string lastUser { get; set; }
+		public string WebUrl { get; set; }
 
 		public string StatusText
 		{
